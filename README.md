@@ -13,3 +13,8 @@ npm run test
 ```
 npm run test:watch
 ```
+
+### Para rodar os testes em modo `debug`
+```
+npm run test:debug
+```
