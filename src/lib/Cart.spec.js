@@ -89,7 +89,7 @@ describe("Cart", () => {
         expect(cart.getTotal()).toEqual(0)
     });
 
-    it('should return an object with the total and the list of items when sumary() is called', () => {
+    it('should return an object with the total and the list of items when summary() is called', () => {
         cart.add({
           product,
           quantity: 5,
@@ -99,10 +99,24 @@ describe("Cart", () => {
           product: product2,
           quantity: 3,
         });
-  
-        expect(cart.sumary()).toMatchSnapshot()
-        expect(cart.getTotal()).toBeGreaterThan(0)
+
+        expect(cart.summary().formatted).toEqual('R$3,025.56')
     });
+  });
+
+  it('should include formatted amount in the summary', () => {
+    cart.add({
+      product,
+      quantity: 5,
+    });
+
+    cart.add({
+      product: product2,
+      quantity: 3,
+    });
+
+    expect(cart.summary()).toMatchSnapshot()
+    expect(cart.getTotal()).toBeGreaterThan(0)    
   });
 
   describe('special conditions', () => {
@@ -119,6 +133,101 @@ describe("Cart", () => {
         })
 
         expect(cart.getTotal()).toEqual(74315)
+    });
+
+    it('should apply quantity discount for even quantities', () => {
+      const condition = {
+        quantity: 2
+      }
+
+      cart.add({
+        product,
+        condition,
+        quantity: 4
+      })
+
+      expect(cart.getTotal()).toEqual(70776)
+    });
+
+    it('should NOT apply quantity discount for even quantities', () => {
+      const condition = {
+        quantity: 2
+      }
+
+      cart.add({
+        product,
+        condition,
+        quantity: 1
+      })
+
+      expect(cart.getTotal()).toEqual(35388)
+    });
+
+    it('should apply quantity discount for odd quantities', () => {
+      const condition = {
+        quantity: 2
+      }
+
+      cart.add({
+        product,
+        condition,
+        quantity: 5
+      })
+
+      expect(cart.getTotal()).toEqual(106164)
+    });
+
+    it('should NOT apply percentage discount when certain quantity is below or equals minimum', () => {
+        const condition = {
+            percentage: 30,
+            minimum: 2
+        }
+
+        cart.add({
+            product,
+            condition,
+            quantity: 2
+        })
+
+        expect(cart.getTotal()).toEqual(70776)
+    });
+
+    it('should receive two or more conditions and determine/apply the best discount. First case', () => {
+      const condition1 = {
+        percentage: 30,
+        minimum: 2
+      }
+
+      const condition2 = {
+        quantity: 2
+      }
+
+      cart.add({
+        product,
+        condition: [condition1, condition2],
+        quantity: 5
+      })
+
+      expect(cart.getTotal()).toEqual(106164)
+    });
+
+    it('should receive two or more conditions and determine/apply the best discount. Second case', () => {
+      const condition1 = {
+        percentage: 80,
+        minimum: 2
+      }
+
+      const condition2 = {
+        quantity: 2
+      }
+
+      cart.add({
+        product,
+        condition: [condition1, condition2],
+        quantity: 5
+      })
+
+      expect(cart.getTotal()).toEqual(35388)
     });
   })
 });

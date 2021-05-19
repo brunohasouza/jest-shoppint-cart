@@ -1,4 +1,5 @@
 import Dinero from 'dinero.js'
+import { calculateDiscount } from './discount.utils'
 
 const Money = Dinero
 Money.defaultCurrency = 'BRL'
@@ -8,12 +9,12 @@ export default class Cart {
     items = []
 
     getTotal() {
-        const total = this.items.reduce((acc, curr) => {
-            const amount = Money({ amount: curr.quantity * curr.product.price })
+        const total = this.items.reduce((acc, { quantity, product, condition }) => {
+            const amount = Money({ amount: quantity * product.price })
             let discount = Money({ amount: 0 })
 
-            if (curr.condition && curr.condition.percentage && curr.quantity > curr.condition.minimum) {
-                discount = amount.percentage(curr.condition.percentage)
+            if (condition) {
+                discount = calculateDiscount(amount, quantity, condition)
             }
 
             return acc.add(amount).subtract(discount)
@@ -36,15 +37,16 @@ export default class Cart {
         this.items = this.items.filter(item => item.product.title !== product.title)
     }
 
-    sumary() {
+    summary() {
         const total = this.getTotal()
         const items = this.items
+        const formatted = Money({ amount: total }).toFormat('$0,0.00')
 
-        return { total, items }
+        return { total, items, formatted }
     }
 
     checkout() {
-        const payload = this.sumary()
+        const payload = this.summary()
 
         this.items = []
 
